@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:momentum/core/constants/app_icons.dart';
+import 'package:momentum/features/HomeScreen/data/models/task_model.dart';
+import 'package:momentum/core/localization/app_strings.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -10,61 +13,38 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final List<Task> _tasks = [];
+  late Box<Task> _taskBox;
   final TextEditingController _searchController = TextEditingController();
-  List<Task> _filteredTasks = [];
+  String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
-    _filteredTasks = List.from(_tasks);
-  }
-
-  void _addTask() {
-    showDialog(
-      context: context,
-      builder: (context) => AddTaskDialog(
-        onTaskAdded: (newTask) {
-          setState(() {
-            _tasks.add(newTask);
-            _filteredTasks.add(newTask);
-          });
-        },
-      ),
-    );
+    _taskBox = Hive.box<Task>('tasks');
   }
 
   void _toggleTaskCompletion(Task task) {
-    setState(() {
-      task.isCompleted = !task.isCompleted;
-    });
-  }
-
-  void _filterTasks(String query) {
-    setState(() {
-      _filteredTasks = _tasks
-          .where((task) =>
-          task.title.toLowerCase().contains(query.toLowerCase()))
-          .toList();
-    });
+    task.isCompleted = !task.isCompleted;
+    task.save();
   }
 
   void _deleteTask(Task task) {
-    setState(() {
-      _tasks.remove(task);
-      _filteredTasks.remove(task);
-    });
+    final taskKey = task.key;
+    final taskTitle = task.title;
+    final taskIsCompleted = task.isCompleted;
+    
+    task.delete();
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('${task.title} has been deleted'),
+        content: Text(AppStrings.of(context).taskDeleted(taskTitle)),
         action: SnackBarAction(
-          label: 'Undo',
+          label: AppStrings.of(context).undo,
           onPressed: () {
-            setState(() {
-              _tasks.add(task);
-              _filteredTasks.add(task);
-            });
+            _taskBox.add(Task(
+              title: taskTitle,
+              isCompleted: taskIsCompleted,
+            ));
           },
         ),
       ),
@@ -79,134 +59,129 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    int completedCount = _tasks.where((task) => task.isCompleted).length;
-    int pendingCount = _tasks.length - completedCount;
-
+    final l10n = AppStrings.of(context);
     return Scaffold(
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.all(24.0.r),
-          child: Column(
-            children: [
-              Row(
+          child: ValueListenableBuilder(
+            valueListenable: _taskBox.listenable(),
+            builder: (context, Box<Task> box, _) {
+              List<Task> tasks = box.values.toList();
+              
+              if (_searchQuery.isNotEmpty) {
+                tasks = tasks.where((task) => 
+                  task.title.toLowerCase().contains(_searchQuery.toLowerCase())
+                ).toList();
+              }
+
+              return Column(
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Momentum',
-                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 32.sp,
-                          ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.appTitle,
+                              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 32.sp,
+                              ),
+                            ),
+                            SizedBox(height: 8.h),
+                            Text(
+                              l10n.tasksCount(tasks.length),
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Theme.of(context).textTheme.bodySmall?.color,
+                                fontSize: 14.sp,
+                              ),
+                            ),
+                          ],
                         ),
-                        SizedBox(height: 8.h),
-                        Text(
-                          '${_tasks.length} task${_tasks.length != 1 ? 's' : ''}',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).textTheme.bodySmall?.color,
-                            fontSize: 14.sp,
-                          ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 24.h),
+                  TextField(
+                    controller: _searchController,
+                    onChanged: (value) {
+                      setState(() {
+                        _searchQuery = value;
+                      });
+                    },
+                    decoration: InputDecoration(
+                      hintText: l10n.searchTasks,
+                      prefixIcon: Icon(AppIcons.search, size: 24.r),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16.r),
+                        borderSide: BorderSide(
+                          color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
                         ),
-                      ],
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16.r),
+                        borderSide: BorderSide(
+                          color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16.r),
+                        borderSide: BorderSide(
+                          color: Theme.of(context).colorScheme.primary,
+                          width: 2.w,
+                        ),
+                      ),
+                      filled: true,
+                      fillColor: Theme.of(context).cardColor,
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 20.w,
+                        vertical: 16.h,
+                      ),
                     ),
+                  ),
+                  SizedBox(height: 24.h),
+                  Expanded(
+                    child: tasks.isEmpty
+                        ? const EmptyTasksState()
+                        : ListView.builder(
+                            itemCount: tasks.length,
+                            itemBuilder: (context, index) {
+                              final task = tasks[index];
+                              return Dismissible(
+                                key: Key(task.key.toString()),
+                                background: Container(
+                                  margin: EdgeInsets.symmetric(vertical: 4.h),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red,
+                                    borderRadius: BorderRadius.circular(16.r),
+                                  ),
+                                  alignment: Alignment.centerLeft,
+                                  padding: EdgeInsets.only(left: 20.w),
+                                  child: Icon(
+                                    AppIcons.delete,
+                                    color: Colors.white,
+                                    size: 28.r,
+                                  ),
+                                ),
+                                direction: DismissDirection.endToStart,
+                                onDismissed: (_) => _deleteTask(task),
+                                child: TaskItem(
+                                  task: task,
+                                  onTaskToggled: () => _toggleTaskCompletion(task),
+                                ),
+                              );
+                            },
+                          ),
                   ),
                 ],
-              ),
-              SizedBox(height: 24.h),
-              TextField(
-                controller: _searchController,
-                onChanged: _filterTasks,
-                decoration: InputDecoration(
-                  hintText: 'Search tasks...',
-                  prefixIcon: Icon(AppIcons.search, size: 24.r),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16.r),
-                    borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
-                    ),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16.r),
-                    borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
-                    ),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16.r),
-                    borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.primary,
-                      width: 2.w,
-                    ),
-                  ),
-                  filled: true,
-                  fillColor: Theme.of(context).cardColor,
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 20.w,
-                    vertical: 16.h,
-                  ),
-                ),
-              ),
-              SizedBox(height: 24.h),
-              Expanded(
-                child: _filteredTasks.isEmpty
-                    ? const EmptyTasksState()
-                    : ListView.builder(
-                  itemCount: _filteredTasks.length,
-                  itemBuilder: (context, index) {
-                    final task = _filteredTasks[index];
-                    return Dismissible(
-                      key: Key(task.id),
-                      background: Container(
-                        margin: EdgeInsets.symmetric(vertical: 4.h),
-                        decoration: BoxDecoration(
-                          color: Colors.red,
-                          borderRadius: BorderRadius.circular(16.r),
-                        ),
-                        alignment: Alignment.centerLeft,
-                        padding: EdgeInsets.only(left: 20.w),
-                        child: Icon(
-                          AppIcons.delete,
-                          color: Colors.white,
-                          size: 28.r,
-                        ),
-                      ),
-                      direction: DismissDirection.endToStart,
-                      onDismissed: (_) => _deleteTask(task),
-                      child: TaskItem(
-                        task: task,
-                        onTaskToggled: () => _toggleTaskCompletion(task),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
+              );
+            },
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _addTask,
-        child: Icon(AppIcons.add, size: 24.r),
-      ),
     );
-  }
-}
-
-class Task {
-  String id;
-  String title;
-  bool isCompleted;
-
-  Task({required this.title})
-      : id = DateTime.now().millisecondsSinceEpoch.toString(),
-        isCompleted = false;
-
-  Task copyWith({bool? isCompleted}) {
-    return Task(
-      title: title,
-    )..isCompleted = isCompleted ?? this.isCompleted;
   }
 }
 
@@ -287,7 +262,6 @@ class TaskItem extends StatelessWidget {
   }
 }
 
-// The rest of the supporting classes remain the same
 class AddTaskDialog extends StatefulWidget {
   final Function(Task) onTaskAdded;
 
@@ -302,15 +276,16 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppStrings.of(context);
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
-      title: Text('Add New Task', style: TextStyle(fontSize: 20.sp)),
+      title: Text(l10n.addNewTask, style: TextStyle(fontSize: 20.sp)),
       content: TextField(
         controller: _controller,
         autofocus: true,
         style: TextStyle(fontSize: 16.sp),
         decoration: InputDecoration(
-          hintText: 'Enter task title',
+          hintText: l10n.enterTaskTitle,
           hintStyle: TextStyle(fontSize: 16.sp),
           border: const OutlineInputBorder(),
         ),
@@ -319,7 +294,7 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text('Cancel', style: TextStyle(fontSize: 14.sp)),
+          child: Text(l10n.cancel, style: TextStyle(fontSize: 14.sp)),
         ),
         ElevatedButton(
           onPressed: () {
@@ -329,7 +304,7 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
               Navigator.of(context).pop();
             }
           },
-          child: Text('Add Task', style: TextStyle(fontSize: 14.sp)),
+          child: Text(l10n.addTask, style: TextStyle(fontSize: 14.sp)),
         ),
       ],
     );
@@ -347,6 +322,7 @@ class EmptyTasksState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppStrings.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -358,12 +334,12 @@ class EmptyTasksState extends StatelessWidget {
           ),
           SizedBox(height: 16.h),
           Text(
-            'No tasks yet',
+            l10n.noTasksYet,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 24.sp),
           ),
           SizedBox(height: 8.h),
           Text(
-            'Tap the + button to add your first task',
+            l10n.tapToAdd,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 14.sp),
             textAlign: TextAlign.center,
           ),

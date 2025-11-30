@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:momentum/core/constants/app_icons.dart';
+import 'package:momentum/core/localization/language_cubit.dart';
 import 'package:momentum/core/theme/theme_cubit.dart';
+import 'package:momentum/core/localization/app_strings.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppStrings.of(context);
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -17,11 +20,11 @@ class SettingsScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Settings',
+                l10n.settings,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 28.sp,
-                ),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 28.sp,
+                    ),
               ),
               SizedBox(height: 32.h),
               Expanded(
@@ -35,16 +38,17 @@ class SettingsScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'General',
+                        l10n.general,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 20.sp,
-                        ),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 20.sp,
+                            ),
                       ),
                       SizedBox(height: 20.h),
                       ListTile(
                         leading: Icon(AppIcons.darkMode, size: 24.r),
-                        title: Text('Dark Mode', style: TextStyle(fontSize: 16.sp)),
+                        title: Text(l10n.darkMode,
+                            style: TextStyle(fontSize: 16.sp)),
                         trailing: BlocBuilder<ThemeCubit, ThemeMode>(
                           builder: (context, themeMode) {
                             return Switch(
@@ -57,29 +61,16 @@ class SettingsScreen extends StatelessWidget {
                         ),
                       ),
                       ListTile(
+                        leading: Icon(Icons.language, size: 24.r),
+                        title: Text(l10n.language,
+                            style: TextStyle(fontSize: 16.sp)),
+                        onTap: () => _showLanguageDialog(context),
+                        trailing: Icon(AppIcons.arrowForward, size: 16.r),
+                      ),
+                      ListTile(
                         leading: Icon(AppIcons.notifications, size: 24.r),
-                        title: Text('Notifications', style: TextStyle(fontSize: 16.sp)),
-                        trailing: Icon(AppIcons.arrowForward, size: 16.r),
-                        onTap: () {},
-                      ),
-                      SizedBox(height: 24.h),
-                      Text(
-                        'Data & Storage',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 20.sp,
-                        ),
-                      ),
-                      SizedBox(height: 20.h),
-                      ListTile(
-                        leading: Icon(AppIcons.backup, size: 24.r),
-                        title: Text('Backup Tasks', style: TextStyle(fontSize: 16.sp)),
-                        trailing: Icon(AppIcons.arrowForward, size: 16.r),
-                        onTap: () {},
-                      ),
-                      ListTile(
-                        leading: Icon(AppIcons.clearData, size: 24.r),
-                        title: Text('Clear Data', style: TextStyle(fontSize: 16.sp)),
+                        title: Text(l10n.notifications,
+                            style: TextStyle(fontSize: 16.sp)),
                         trailing: Icon(AppIcons.arrowForward, size: 16.r),
                         onTap: () {},
                       ),
@@ -89,6 +80,57 @@ class SettingsScreen extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  void _showLanguageDialog(BuildContext context) {
+    final l10n = AppStrings.of(context);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
+        title: Text(l10n.changeLanguage, style: TextStyle(fontSize: 20.sp)),
+        content: BlocBuilder<LanguageCubit, Locale>(
+          builder: (context, currentLocale) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  title: const Text('English'),
+                  leading: Radio<String>(
+                    value: 'en',
+                    groupValue: currentLocale.languageCode,
+                    onChanged: (value) {
+                      context.read<LanguageCubit>().changeLanguage(value!);
+                      Navigator.pop(context);
+                    },
+                  ),
+                  onTap: () {
+                    context.read<LanguageCubit>().changeLanguage('en');
+                    Navigator.pop(context);
+                  },
+                ),
+                ListTile(
+                  title: const Text('العربية'),
+                  leading: Radio<String>(
+                    value: 'ar',
+                    groupValue: currentLocale.languageCode,
+                    onChanged: (value) {
+                      context.read<LanguageCubit>().changeLanguage(value!);
+                      Navigator.pop(context);
+                    },
+                  ),
+                  onTap: () {
+                    context.read<LanguageCubit>().changeLanguage('ar');
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
+            );
+          },
         ),
       ),
     );

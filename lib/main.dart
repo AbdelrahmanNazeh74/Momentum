@@ -2,12 +2,28 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:momentum/core/localization/language_cubit.dart';
 import 'package:momentum/core/theme/theme_cubit.dart';
 import 'package:momentum/features/MainScreen/view/main_screen.dart';
 
 import 'core/constants/app_colors.dart';
+import 'core/localization/app_strings.dart';
+import 'features/HomeScreen/data/models/task_model.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Hive
+  await Hive.initFlutter();
+  
+  // Register Adapters
+  Hive.registerAdapter(TaskAdapter());
+  
+  // Open Boxes
+  await Hive.openBox<Task>('tasks');
+  
   runApp(const MyApp());
 }
 
@@ -16,22 +32,40 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => ThemeCubit(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (context) => ThemeCubit()),
+        BlocProvider(create: (context) => LanguageCubit()),
+      ],
       child: BlocBuilder<ThemeCubit, ThemeMode>(
         builder: (context, themeMode) {
-          return ScreenUtilInit(
-            designSize: const Size(375, 812), // Common mobile design size (e.g. iPhone X)
-            minTextAdapt: true,
-            splitScreenMode: true,
-            builder: (context, child) {
-              return MaterialApp(
-                title: 'Momentum',
-                debugShowCheckedModeBanner: false,
-                theme: AppTheme.lightTheme,
-                darkTheme: AppTheme.darkTheme,
-                themeMode: themeMode,
-                home: const SplashScreen(),
+          return BlocBuilder<LanguageCubit, Locale>(
+            builder: (context, locale) {
+              return ScreenUtilInit(
+                designSize: const Size(375, 812),
+                minTextAdapt: true,
+                splitScreenMode: true,
+                builder: (context, child) {
+                  return MaterialApp(
+                    title: 'Momentum',
+                    debugShowCheckedModeBanner: false,
+                    theme: AppTheme.lightTheme,
+                    darkTheme: AppTheme.darkTheme,
+                    themeMode: themeMode,
+                    locale: locale,
+                    localizationsDelegates: const [
+                      AppLocalizationsDelegate(),
+                      GlobalMaterialLocalizations.delegate,
+                      GlobalWidgetsLocalizations.delegate,
+                      GlobalCupertinoLocalizations.delegate,
+                    ],
+                    supportedLocales: const [
+                      Locale('en'), // English
+                      Locale('ar'), // Arabic
+                    ],
+                    home: const SplashScreen(),
+                  );
+                },
               );
             },
           );
@@ -81,14 +115,14 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Center(
         child: ScaleTransition(
           scale: _animation,
           child: FadeTransition(
             opacity: _animation,
             child: Image.asset(
-              'assets/images/app_logo.jpeg',
+              'assets/images/app_icon.png',
               width: 200.w,
               height: 200.h,
             ),
