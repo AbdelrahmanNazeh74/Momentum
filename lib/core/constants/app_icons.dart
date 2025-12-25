@@ -12,6 +12,7 @@ class AppIcons {
   static const IconData check = Icons.check;
   static const IconData search = Icons.search;
   static const IconData inboxOutlined = Icons.inbox_outlined;
+  static const IconData calendar = Icons.calendar_today;
 
   // Profile Options
   static const IconData editProfile = Icons.account_circle;

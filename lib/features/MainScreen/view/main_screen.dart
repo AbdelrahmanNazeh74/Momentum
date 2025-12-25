@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:momentum/core/constants/app_colors.dart';
 import 'package:momentum/core/constants/app_icons.dart';
 
 import '../../HomeScreen/data/models/task_model.dart';
@@ -23,15 +24,16 @@ class _MainScreenState extends State<MainScreen> {
   ];
 
   void _addTask() {
+    final taskBox = Hive.box<Task>('tasks');
     showDialog(
       context: context,
       builder: (context) => AddTaskDialog(
         onTaskAdded: (newTask) {
-          final taskBox = Hive.box<Task>('tasks');
           taskBox.add(newTask);
           // Optional: Navigate back to home after adding task if desired
           // setState(() => _currentIndex = 0);
         },
+        taskCount: taskBox.length,
       ),
     );
   }
@@ -48,7 +50,7 @@ class _MainScreenState extends State<MainScreen> {
         child: FloatingActionButton(
           onPressed: _addTask, // Call _addTask regardless of current index
           elevation: 4,
-          backgroundColor: const Color(0xFF1E5E6A),
+          backgroundColor: AppColors.primaryColor,
           shape: const CircleBorder(),
           child: Icon(AppIcons.add, size: 30.r, color: Colors.white),
         ),
@@ -91,7 +93,7 @@ class _MainScreenState extends State<MainScreen> {
                        icon: Icon(
                          AppIcons.home,
                          color: _currentIndex == 0 
-                             ? const Color(0xFF1E5E6A) 
+                             ? AppColors.primaryColor
                              : Theme.of(context).iconTheme.color?.withOpacity(0.5),
                          size: 32.r,
                        ),
@@ -111,7 +113,7 @@ class _MainScreenState extends State<MainScreen> {
                        icon: Icon(
                          AppIcons.settings,
                          color: _currentIndex == 1 
-                             ? const Color(0xFF1E5E6A) 
+                             ? AppColors.primaryColor
                              : Theme.of(context).iconTheme.color?.withOpacity(0.5),
                          size: 32.r,
                        ),

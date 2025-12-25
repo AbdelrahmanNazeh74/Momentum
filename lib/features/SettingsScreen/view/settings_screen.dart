@@ -67,13 +67,6 @@ class SettingsScreen extends StatelessWidget {
                         onTap: () => _showLanguageDialog(context),
                         trailing: Icon(AppIcons.arrowForward, size: 16.r),
                       ),
-                      ListTile(
-                        leading: Icon(AppIcons.notifications, size: 24.r),
-                        title: Text(l10n.notifications,
-                            style: TextStyle(fontSize: 16.sp)),
-                        trailing: Icon(AppIcons.arrowForward, size: 16.r),
-                        onTap: () {},
-                      ),
                     ],
                   ),
                 ),

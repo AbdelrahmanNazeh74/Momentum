@@ -6,6 +6,9 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:momentum/core/localization/language_cubit.dart';
 import 'package:momentum/core/theme/theme_cubit.dart';
+import 'package:momentum/features/HomeScreen/data/models/priority.dart';
+import 'package:momentum/features/HomeScreen/data/models/priority_adapter.dart';
+import 'package:momentum/features/HomeScreen/data/models/sub_task.dart';
 import 'package:momentum/features/MainScreen/view/main_screen.dart';
 
 import 'core/constants/app_colors.dart';
@@ -14,16 +17,25 @@ import 'features/HomeScreen/data/models/task_model.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize Hive
   await Hive.initFlutter();
-  
+
   // Register Adapters
-  Hive.registerAdapter(TaskAdapter());
-  
+  if (!Hive.isAdapterRegistered(TaskAdapter().typeId)) {
+    Hive.registerAdapter(TaskAdapter());
+  }
+  if (!Hive.isAdapterRegistered(SubtaskAdapter().typeId)) {
+    Hive.registerAdapter(SubtaskAdapter());
+  }
+  if (!Hive.isAdapterRegistered(PriorityAdapter().typeId)) {
+    Hive.registerAdapter(PriorityAdapter());
+  }
+
   // Open Boxes
   await Hive.openBox<Task>('tasks');
-  
+  await Hive.openBox<Subtask>('subtasks');
+
   runApp(const MyApp());
 }
 

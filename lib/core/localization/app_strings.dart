@@ -27,6 +27,26 @@ abstract class AppStrings {
   String tasksCount(int count);
   String get language;
   String get changeLanguage;
+  String get subtasks;
+  String get addSubtask;
+  String get description;
+  String get category;
+  String get dueDate;
+  String get priority;
+  String get filterAll;
+  String get filterToday;
+  String get filterUpcoming;
+  String get sortBy;
+  String get sortByNone;
+  String get sortByDate;
+  String get sortByPriority;
+  String get sortByCategory;
+  String get priorityHigh;
+  String get priorityMedium;
+  String get priorityLow;
+  String get enableNotifications;
+  String get reminder;
+  String get selectTime;
 }
 
 class EnStrings extends AppStrings {
@@ -74,6 +94,46 @@ class EnStrings extends AppStrings {
   String get language => "Language";
   @override
   String get changeLanguage => "Change Language";
+  @override
+  String get subtasks => "Subtasks";
+  @override
+  String get addSubtask => "Add a subtask";
+  @override
+  String get description => "Description";
+  @override
+  String get category => "Category";
+  @override
+  String get dueDate => "Due Date";
+  @override
+  String get priority => "Priority";
+  @override
+  String get filterAll => "All";
+  @override
+  String get filterToday => "Today";
+  @override
+  String get filterUpcoming => "Upcoming";
+  @override
+  String get sortBy => "Sort by:";
+  @override
+  String get sortByNone => "None";
+  @override
+  String get sortByDate => "Date";
+  @override
+  String get sortByPriority => "Priority";
+  @override
+  String get sortByCategory => "Category";
+  @override
+  String get priorityHigh => "High";
+  @override
+  String get priorityMedium => "Medium";
+  @override
+  String get priorityLow => "Low";
+  @override
+  String get enableNotifications => "Enable Notifications";
+  @override
+  String get reminder => "Reminder";
+  @override
+  String get selectTime => "Select Time";
 }
 
 class ArStrings extends AppStrings {
@@ -121,6 +181,46 @@ class ArStrings extends AppStrings {
   String get language => "اللغة";
   @override
   String get changeLanguage => "تغيير اللغة";
+  @override
+  String get subtasks => "المهام الفرعية";
+  @override
+  String get addSubtask => "إضافة مهمة فرعية";
+  @override
+  String get description => "الوصف";
+  @override
+  String get category => "الفئة";
+  @override
+  String get dueDate => "تاريخ الاستحقاق";
+  @override
+  String get priority => "الأولوية";
+  @override
+  String get filterAll => "الكل";
+  @override
+  String get filterToday => "اليوم";
+  @override
+  String get filterUpcoming => "القادمة";
+  @override
+  String get sortBy => "ترتيب حسب:";
+  @override
+  String get sortByNone => "لا شيء";
+  @override
+  String get sortByDate => "التاريخ";
+  @override
+  String get sortByPriority => "الأولوية";
+  @override
+  String get sortByCategory => "الفئة";
+  @override
+  String get priorityHigh => "عالية";
+  @override
+  String get priorityMedium => "متوسطة";
+  @override
+  String get priorityLow => "منخفضة";
+  @override
+  String get enableNotifications => "تفعيل الإشعارات";
+  @override
+  String get reminder => "تذكير";
+  @override
+  String get selectTime => "اختر الوقت";
 }
 
 class AppLocalizationsDelegate extends LocalizationsDelegate<AppStrings> {
